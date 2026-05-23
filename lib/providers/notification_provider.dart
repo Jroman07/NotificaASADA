@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/notification_model.dart';
+import '../models/notification_model.dart' as models;
 import '../services/api_service.dart';
 
 class NotificationProvider extends ChangeNotifier {
@@ -8,11 +8,11 @@ class NotificationProvider extends ChangeNotifier {
 
   final ApiService apiService;
 
-  List<Notification> _notifications = [];
+  List<models.Notification> _notifications = [];
   bool _isLoading = false;
   String? _error;
 
-  List<Notification> get notifications => _notifications;
+  List<models.Notification> get notifications => _notifications;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -32,7 +32,7 @@ class NotificationProvider extends ChangeNotifier {
       if (res is List) {
         _notifications = res
             .whereType<Map<String, dynamic>>()
-            .map(Notification.fromJson)
+            .map(models.Notification.fromJson)
             .toList();
         // Ordenar por fecha descendente (más recientes primero).
         _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -42,7 +42,7 @@ class NotificationProvider extends ChangeNotifier {
         if (data is List) {
           _notifications = data
               .whereType<Map<String, dynamic>>()
-              .map(Notification.fromJson)
+              .map(models.Notification.fromJson)
               .toList();
           _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         } else {

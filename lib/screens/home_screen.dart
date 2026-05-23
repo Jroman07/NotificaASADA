@@ -47,36 +47,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final notifState = ref.watch(notificationControllerProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F5F8),
       appBar: AppBar(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'NotificaASADA',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-            ),
-            Text(
-              'Notificaciones',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ],
+        backgroundColor: const Color(0xFFF2F5F8),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleSpacing: 0,
+        title: const Text(
+          'NotificaASADA',
+          style: TextStyle(
+            color: Color(0xFF0B1220),
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          ),
         ),
-        centerTitle: false,
         actions: [
           IconButton(
             tooltip: 'Cerrar sesión',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
             onPressed: () =>
                 ref.read(authControllerProvider.notifier).logout(),
           ),
+          const SizedBox(width: 4),
         ],
       ),
-      body: _buildBody(context, notifState),
+      body: SafeArea(
+        top: false,
+        child: _buildBody(context, notifState),
+      ),
     );
   }
 
@@ -92,25 +91,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _errorWidget(BuildContext context, String error) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       children: [
-        Icon(
-          Icons.cloud_off,
-          size: 56,
-          color: Theme.of(context).colorScheme.error,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          error,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: () =>
-              ref.read(notificationControllerProvider.notifier).loadNotifications(),
-          icon: const Icon(Icons.refresh),
-          label: const Text('Reintentar'),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFD9E0EA)),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.cloud_off,
+                size: 56,
+                color: Color(0xFF0B1730),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                error,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF4B5563),
+                  fontSize: 16,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0B1730),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () =>
+                    ref.read(notificationControllerProvider.notifier).loadNotifications(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -119,78 +138,137 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _emptyWidget(BuildContext context) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       children: [
-        Icon(
-          Icons.notifications_none,
-          size: 56,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No hay notificaciones',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: () =>
-              ref.read(notificationControllerProvider.notifier).loadNotifications(),
-          icon: const Icon(Icons.refresh),
-          label: const Text('Recargar'),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFD9E0EA)),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.notifications_none,
+                size: 56,
+                color: Color(0xFF6B7280),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'No hay notificaciones',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0B1730),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () =>
+                    ref.read(notificationControllerProvider.notifier).loadNotifications(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Recargar'),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
   Widget _listWidget(BuildContext context, List<notif_model.Notification> notifications) {
+    final recentCount = notifications.where((n) {
+      final now = DateTime.now();
+      final local = n.createdAt.toLocal();
+      return local.year == now.year && local.month == now.month;
+    }).length;
+
     return RefreshIndicator(
       onRefresh: () =>
           ref.read(notificationControllerProvider.notifier).loadNotifications(),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView.builder(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = constraints.maxWidth < 420 ? 14.0 : 22.0;
+
+          return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: notifications.length,
+            padding: EdgeInsets.fromLTRB(horizontal, 10, horizontal, 16),
+            itemCount: notifications.length + 3,
             itemBuilder: (context, index) {
-              final n = notifications[index];
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _StatsRow(
+                    total: notifications.length,
+                    recent: recentCount,
+                  ),
+                );
+              }
+
+              if (index == 1) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: 14),
+                  child: _SearchBox(),
+                );
+              }
+
+              if (index == notifications.length + 2) {
+                final max = notifications.length < 5 ? notifications.length : 5;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 14, bottom: 8),
+                  child: _PaginationSummary(total: notifications.length, showingMax: max),
+                );
+              }
+
+              final n = notifications[index - 2];
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  color: n.isRead
-                      ? Theme.of(context).colorScheme.surface
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBFCFD),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFD6DEE8)),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
                                 n.subject.isEmpty ? 'Sin asunto' : n.subject,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight:
-                                          n.isRead ? FontWeight.normal : FontWeight.bold,
-                                    ),
+                                style: const TextStyle(
+                                  color: Color(0xFF0B1220),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            _StatusChip(isRead: n.isRead),
                             if (!n.isRead)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
+                              Padding(
+                                padding: const EdgeInsets.only(left: 6, top: 2),
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF0D5CCC),
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
                               ),
                           ],
@@ -198,26 +276,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(height: 8),
                         Text(
                           n.message,
-                          maxLines: 3,
+                          maxLines: 4,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                          style: const TextStyle(
+                            color: Color(0xFF3F4652),
+                            fontSize: 17,
+                            height: 1.35,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.schedule_outlined,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.outline,
+                              size: 22,
+                              color: Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              _formatFecha(n.createdAt),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.outline,
-                                  ),
+                            Expanded(
+                              child: Text(
+                                _formatFecha(n.createdAt),
+                                style: const TextStyle(
+                                  color: Color(0xFF616B7B),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -227,9 +313,199 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               );
             },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.total, required this.recent});
+
+  final int total;
+  final int recent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: 'NOTIFICACIONES\nTOTALES',
+            value: total.toString(),
+            icon: Icons.notifications_none_outlined,
           ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            title: 'RECIENTES (ESTE\nMES)',
+            value: recent.toString(),
+            icon: Icons.done_all,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.title, required this.value, required this.icon});
+
+  final String title;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBFCFD),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD6DEE8)),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF313844),
+                    fontSize: 12,
+                    height: 1.32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(icon, size: 20, color: const Color(0xFF6E7481)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF051B59),
+              fontSize: 40,
+              height: 1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchBox extends StatelessWidget {
+  const _SearchBox();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBFCFD),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD6DEE8)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.search_rounded, size: 26, color: Color(0xFF707784)),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Buscar por asunto o descripcion...',
+              style: TextStyle(
+                color: Color(0xFF656D7A),
+                fontSize: 16,
+                letterSpacing: 0.3,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.isRead});
+
+  final bool isRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isRead ? const Color(0xFFDCEFE4) : const Color(0xFFFFC107);
+    final fg = isRead ? const Color(0xFF12954A) : const Color(0xFF111827);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        isRead ? 'LEIDA' : 'NO LEIDA',
+        style: TextStyle(
+          color: fg,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+class _PaginationSummary extends StatelessWidget {
+  const _PaginationSummary({required this.total, required this.showingMax});
+
+  final int total;
+  final int showingMax;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Mostrando 1 - $showingMax de $total',
+            style: const TextStyle(
+              color: Color(0xFF606874),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: null,
+          icon: const Icon(Icons.chevron_left_rounded),
+          color: const Color(0xFFA8B0BC),
+        ),
+        const Text(
+          '1 / 3',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        IconButton(
+          onPressed: null,
+          icon: const Icon(Icons.chevron_right_rounded),
+          color: const Color(0xFF0D5CCC),
+        ),
+      ],
     );
   }
 }
