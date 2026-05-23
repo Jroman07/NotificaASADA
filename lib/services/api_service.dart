@@ -84,6 +84,26 @@ class ApiService {
     return Solicitud.fromJson(map);
   }
 
+  /// GET genérico para cualquier endpoint (sin bearer token — usa Dio para eso).
+  /// Devuelve List<dynamic> o Map<String, dynamic> según la respuesta.
+  Future<dynamic> get(String path) async {
+    final response = await _client.get(
+      _uri(path),
+      headers: {'Accept': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw ApiException(
+        'Error en GET $path',
+        response.statusCode,
+      );
+    }
+    final dynamic decoded = jsonDecode(response.body);
+    if (decoded is List || decoded is Map) {
+      return decoded;
+    }
+    throw ApiException('Respuesta JSON inválida en $path');
+  }
+
   List<dynamic> _extractList(dynamic decoded) {
     if (decoded is List) return decoded;
     if (decoded is Map<String, dynamic>) {
