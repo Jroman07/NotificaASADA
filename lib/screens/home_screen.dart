@@ -84,7 +84,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       NotificationLoading() => const Center(child: CircularProgressIndicator()),
       NotificationError(:final message) => _errorWidget(context, message),
       NotificationLoaded(:final notifications) =>
-        notifications.isEmpty ? _emptyWidget(context) : _listWidget(context, notifications),
+        notifications.isEmpty
+            ? _emptyWidget(context)
+            : _listWidget(context, state),
     };
   }
 
@@ -182,7 +184,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _listWidget(BuildContext context, List<notif_model.Notification> notifications) {
+  Widget _listWidget(
+    BuildContext context,
+    NotificationLoaded state,
+  ) {
+    final notifications = state.notifications;
+    final displayedNotifications = state.displayedNotifications;
     final recentCount = notifications.where((n) {
       final now = DateTime.now();
       final local = n.createdAt.toLocal();
@@ -199,7 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(horizontal, 10, horizontal, 16),
-            itemCount: notifications.length + 3,
+            itemCount: displayedNotifications.length + 3,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
@@ -212,21 +219,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
 
               if (index == 1) {
-                return const Padding(
-                  padding: EdgeInsets.only(bottom: 14),
-                  child: _SearchBox(),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _SearchBox(
+                    onChanged: (query) => ref
+                        .read(notificationControllerProvider.notifier)
+                        .searchNotifications(query),
+                  ),
                 );
               }
 
-              if (index == notifications.length + 2) {
-                final max = notifications.length < 5 ? notifications.length : 5;
+              if (index == displayedNotifications.length + 2) {
+                final max =
+                    displayedNotifications.length < 5 ? displayedNotifications.length : 5;
                 return Padding(
                   padding: const EdgeInsets.only(top: 14, bottom: 8),
-                  child: _PaginationSummary(total: notifications.length, showingMax: max),
+                  child: _PaginationSummary(
+                    total: displayedNotifications.length,
+                    showingMax: max,
+                  ),
                 );
               }
 
-              final n = notifications[index - 2];
+              final n = displayedNotifications[index - 2];
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -405,31 +420,64 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _SearchBox extends StatelessWidget {
-  const _SearchBox();
+class _SearchBox extends StatefulWidget {
+  const _SearchBox({required this.onChanged});
+
+  final Function(String) onChanged;
+
+  @override
+  State<_SearchBox> createState() => _SearchBoxState();
+}
+
+class _SearchBoxState extends State<_SearchBox> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _controller.addListener(() {
+      widget.onChanged(_controller.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFFBFCFD),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFD6DEE8)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.search_rounded, size: 26, color: Color(0xFF707784)),
-          SizedBox(width: 8),
+          const Icon(Icons.search_rounded, size: 26, color: Color(0xFF707784)),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              'Buscar por asunto o descripcion...',
-              style: TextStyle(
-                color: Color(0xFF656D7A),
+            child: TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                hintText: 'Buscar por asunto o descripcion...',
+                hintStyle: TextStyle(
+                  color: Color(0xFF656D7A),
+                  fontSize: 16,
+                  letterSpacing: 0.3,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
+              ),
+              style: const TextStyle(
+                color: Color(0xFF0B1220),
                 fontSize: 16,
                 letterSpacing: 0.3,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

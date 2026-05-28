@@ -13,8 +13,17 @@ class NotificationLoading extends NotificationState {
 }
 
 class NotificationLoaded extends NotificationState {
-  const NotificationLoaded(this.notifications);
+  const NotificationLoaded(
+    this.notifications, {
+    this.searchQuery = '',
+    this.filteredNotifications,
+  });
   final List<Notification> notifications;
+  final String searchQuery;
+  final List<Notification>? filteredNotifications;
+
+  List<Notification> get displayedNotifications =>
+      filteredNotifications ?? notifications;
 }
 
 class NotificationError extends NotificationState {
@@ -34,6 +43,29 @@ class NotificationController extends StateNotifier<NotificationState> {
       state = NotificationLoaded(notifications);
     } catch (e) {
       state = NotificationError(e.toString());
+    }
+  }
+
+  void searchNotifications(String query) {
+    final current = state;
+    if (current is! NotificationLoaded) return;
+
+    if (query.isEmpty) {
+      state = NotificationLoaded(current.notifications, searchQuery: query);
+    } else {
+      final filtered = current.notifications
+          .where((notif) {
+            final lowerQuery = query.toLowerCase();
+            return notif.subject.toLowerCase().contains(lowerQuery) ||
+                notif.message.toLowerCase().contains(lowerQuery);
+          })
+          .toList();
+
+      state = NotificationLoaded(
+        current.notifications,
+        searchQuery: query,
+        filteredNotifications: filtered,
+      );
     }
   }
 }
