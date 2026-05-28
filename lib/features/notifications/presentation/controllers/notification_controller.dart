@@ -17,13 +17,32 @@ class NotificationLoaded extends NotificationState {
     this.notifications, {
     this.searchQuery = '',
     this.filteredNotifications,
+    this.currentPage = 1,
+    this.itemsPerPage = 5,
   });
   final List<Notification> notifications;
   final String searchQuery;
   final List<Notification>? filteredNotifications;
+  final int currentPage;
+  final int itemsPerPage;
 
   List<Notification> get displayedNotifications =>
       filteredNotifications ?? notifications;
+
+  int get totalItems => displayedNotifications.length;
+  int get totalPages => (totalItems / itemsPerPage).ceil();
+
+  List<Notification> get pageNotifications {
+    final start = (currentPage - 1) * itemsPerPage;
+    final end = start + itemsPerPage;
+    return displayedNotifications.sublist(
+      start,
+      end > displayedNotifications.length ? displayedNotifications.length : end,
+    );
+  }
+
+  bool get canGoNext => currentPage < totalPages;
+  bool get canGoPrevious => currentPage > 1;
 }
 
 class NotificationError extends NotificationState {
@@ -51,7 +70,12 @@ class NotificationController extends StateNotifier<NotificationState> {
     if (current is! NotificationLoaded) return;
 
     if (query.isEmpty) {
-      state = NotificationLoaded(current.notifications, searchQuery: query);
+      state = NotificationLoaded(
+        current.notifications,
+        searchQuery: query,
+        currentPage: 1,
+        itemsPerPage: current.itemsPerPage,
+      );
     } else {
       final filtered = current.notifications
           .where((notif) {
@@ -65,6 +89,8 @@ class NotificationController extends StateNotifier<NotificationState> {
         current.notifications,
         searchQuery: query,
         filteredNotifications: filtered,
+        currentPage: 1,
+        itemsPerPage: current.itemsPerPage,
       );
     }
   }
@@ -108,13 +134,44 @@ class NotificationController extends StateNotifier<NotificationState> {
           updated,
           searchQuery: current.searchQuery,
           filteredNotifications: filteredUpdated,
+          currentPage: current.currentPage,
+          itemsPerPage: current.itemsPerPage,
         );
       } else {
-        state = NotificationLoaded(updated, searchQuery: current.searchQuery);
+        state = NotificationLoaded(
+          updated,
+          searchQuery: current.searchQuery,
+          currentPage: current.currentPage,
+          itemsPerPage: current.itemsPerPage,
+        );
       }
     } catch (e) {
       state = NotificationError(e.toString());
     }
+  }
+
+  void nextPage() {
+    final current = state;
+    if (current is! NotificationLoaded || !current.canGoNext) return;
+    state = NotificationLoaded(
+      current.notifications,
+      searchQuery: current.searchQuery,
+      filteredNotifications: current.filteredNotifications,
+      currentPage: current.currentPage + 1,
+      itemsPerPage: current.itemsPerPage,
+    );
+  }
+
+  void previousPage() {
+    final current = state;
+    if (current is! NotificationLoaded || !current.canGoPrevious) return;
+    state = NotificationLoaded(
+      current.notifications,
+      searchQuery: current.searchQuery,
+      filteredNotifications: current.filteredNotifications,
+      currentPage: current.currentPage - 1,
+      itemsPerPage: current.itemsPerPage,
+    );
   }
 }
 

@@ -52,7 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: const Color(0xFFF2F5F8),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleSpacing: 0,
+        titleSpacing: 16,
         title: const Text(
           'NotificaASADA',
           style: TextStyle(
@@ -189,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     NotificationLoaded state,
   ) {
     final notifications = state.notifications;
-    final displayedNotifications = state.displayedNotifications;
+    final pageNotifications = state.pageNotifications;
     final recentCount = notifications.where((n) {
       final now = DateTime.now();
       final local = n.createdAt.toLocal();
@@ -206,7 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(horizontal, 10, horizontal, 16),
-            itemCount: displayedNotifications.length + 3,
+            itemCount: pageNotifications.length + 3,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
@@ -229,19 +229,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               }
 
-              if (index == displayedNotifications.length + 2) {
-                final max =
-                    displayedNotifications.length < 5 ? displayedNotifications.length : 5;
+              if (index == pageNotifications.length + 2) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 14, bottom: 8),
                   child: _PaginationSummary(
-                    total: displayedNotifications.length,
-                    showingMax: max,
+                    total: state.displayedNotifications.length,
+                    showing: pageNotifications.length,
+                    currentPage: state.currentPage,
+                    totalPages: state.totalPages,
+                    onPreviousPage: state.canGoPrevious
+                        ? () => ref
+                            .read(notificationControllerProvider.notifier)
+                            .previousPage()
+                        : null,
+                    onNextPage: state.canGoNext
+                        ? () => ref
+                            .read(notificationControllerProvider.notifier)
+                            .nextPage()
+                        : null,
                   ),
                 );
               }
 
-              final n = displayedNotifications[index - 2];
+              final n = pageNotifications[index - 2];
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -525,42 +535,48 @@ class _StatusChip extends StatelessWidget {
 }
 
 class _PaginationSummary extends StatelessWidget {
-  const _PaginationSummary({required this.total, required this.showingMax});
+  const _PaginationSummary({
+    required this.total,
+    required this.showing,
+    required this.currentPage,
+    required this.totalPages,
+    this.onPreviousPage,
+    this.onNextPage,
+  });
 
   final int total;
-  final int showingMax;
+  final int showing;
+  final int currentPage;
+  final int totalPages;
+  final VoidCallback? onPreviousPage;
+  final VoidCallback? onNextPage;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: Text(
-            'Mostrando 1 - $showingMax de $total',
-            style: const TextStyle(
-              color: Color(0xFF606874),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
         IconButton(
-          onPressed: null,
+          onPressed: onPreviousPage,
           icon: const Icon(Icons.chevron_left_rounded),
-          color: const Color(0xFFA8B0BC),
+          color: onPreviousPage != null
+              ? const Color(0xFF0D5CCC)
+              : const Color(0xFFA8B0BC),
         ),
-        const Text(
-          '1 / 3',
-          style: TextStyle(
+        Text(
+          '$currentPage / $totalPages',
+          style: const TextStyle(
             color: Color(0xFF111827),
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
         ),
         IconButton(
-          onPressed: null,
+          onPressed: onNextPage,
           icon: const Icon(Icons.chevron_right_rounded),
-          color: const Color(0xFF0D5CCC),
+          color: onNextPage != null
+              ? const Color(0xFF0D5CCC)
+              : const Color(0xFFA8B0BC),
         ),
       ],
     );
