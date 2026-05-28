@@ -245,84 +245,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFBFCFD),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFD6DEE8)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                n.subject.isEmpty ? 'Sin asunto' : n.subject,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0xFF0B1220),
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            _StatusChip(isRead: n.isRead),
-                            if (!n.isRead)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 6, top: 2),
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF0D5CCC),
-                                    shape: BoxShape.circle,
+                child: GestureDetector(
+                  onTap: () {
+                    if (!n.isRead) {
+                      ref
+                          .read(notificationControllerProvider.notifier)
+                          .markAsRead(n.userNotificationId);
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBFCFD),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFD6DEE8)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  n.subject.isEmpty ? 'Sin asunto' : n.subject,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF0B1220),
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.2,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          n.message,
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF3F4652),
-                            fontSize: 17,
-                            height: 1.35,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.schedule_outlined,
-                              size: 22,
-                              color: Color(0xFF6B7280),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                _formatFecha(n.createdAt),
-                                style: const TextStyle(
-                                  color: Color(0xFF616B7B),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                              const SizedBox(width: 8),
+                              _StatusChip(isRead: n.isRead),
+                              if (!n.isRead)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 6, top: 2),
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF0D5CCC),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            n.message,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF3F4652),
+                              fontSize: 17,
+                              height: 1.35,
+                              fontWeight: FontWeight.w400,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.schedule_outlined,
+                                size: 22,
+                                color: Color(0xFF6B7280),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _formatFecha(n.createdAt),
+                                  style: const TextStyle(
+                                    color: Color(0xFF616B7B),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

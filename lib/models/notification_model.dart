@@ -1,6 +1,6 @@
 /// Notificación del backend: estructura anidada con Notification dentro.
 /// {
-///   Id: int,
+///   Id: int (userNotificationId),
 ///   Is_Read: bool,
 ///   CreatedAt: string (ISO),
 ///   Notification: {
@@ -12,6 +12,7 @@
 /// }
 class Notification {
   const Notification({
+    required this.userNotificationId,
     required this.id,
     required this.subject,
     required this.message,
@@ -19,6 +20,7 @@ class Notification {
     required this.isRead,
   });
 
+  final int userNotificationId;
   final int id;
   final String subject;
   final String message;
@@ -32,6 +34,7 @@ class Notification {
     }
 
     return Notification(
+      userNotificationId: _readInt(json['Id']),
       id: _readInt(notif['Id']),
       subject: _readString(notif['Subject']),
       message: _readString(notif['Message']),
@@ -41,6 +44,7 @@ class Notification {
   }
 
   Map<String, dynamic> toJson() => {
+        'Id': userNotificationId,
         'Notification': {
           'Id': id,
           'Subject': subject,

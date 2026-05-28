@@ -68,6 +68,54 @@ class NotificationController extends StateNotifier<NotificationState> {
       );
     }
   }
+
+  Future<void> markAsRead(int userNotificationId) async {
+    try {
+      await _repo.markNotificationAsRead(userNotificationId);
+      final current = state;
+      if (current is! NotificationLoaded) return;
+
+      final updated = current.notifications.map((n) {
+        if (n.userNotificationId == userNotificationId) {
+          return Notification(
+            userNotificationId: n.userNotificationId,
+            id: n.id,
+            subject: n.subject,
+            message: n.message,
+            createdAt: n.createdAt,
+            isRead: true,
+          );
+        }
+        return n;
+      }).toList();
+
+      if (current.filteredNotifications != null) {
+        final filteredUpdated = current.filteredNotifications!.map((n) {
+          if (n.userNotificationId == userNotificationId) {
+            return Notification(
+              userNotificationId: n.userNotificationId,
+              id: n.id,
+              subject: n.subject,
+              message: n.message,
+              createdAt: n.createdAt,
+              isRead: true,
+            );
+          }
+          return n;
+        }).toList();
+
+        state = NotificationLoaded(
+          updated,
+          searchQuery: current.searchQuery,
+          filteredNotifications: filteredUpdated,
+        );
+      } else {
+        state = NotificationLoaded(updated, searchQuery: current.searchQuery);
+      }
+    } catch (e) {
+      state = NotificationError(e.toString());
+    }
+  }
 }
 
 final notificationControllerProvider =

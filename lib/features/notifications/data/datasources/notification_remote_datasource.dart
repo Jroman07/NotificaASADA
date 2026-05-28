@@ -28,4 +28,11 @@ class NotificationRemoteDataSource {
 
     throw const FormatException('Respuesta de notificaciones inválida.');
   }
+
+  /// PATCH /notification/{userNotificationId}/read — marca como leída.
+  Future<void> markAsRead(int userNotificationId) async {
+    await _dio.patch<dynamic>(
+      '/$userNotificationId/read',
+    );
+  }
 }

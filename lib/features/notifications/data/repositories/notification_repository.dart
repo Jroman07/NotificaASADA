@@ -19,6 +19,14 @@ class NotificationRepository {
       rethrow;
     }
   }
+
+  Future<void> markNotificationAsRead(int userNotificationId) async {
+    try {
+      await _remote.markAsRead(userNotificationId);
+    } on Exception {
+      rethrow;
+    }
+  }
 }
 
 final notificationRemoteDataSourceProvider =
